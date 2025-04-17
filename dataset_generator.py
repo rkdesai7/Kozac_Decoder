@@ -1,10 +1,11 @@
+import random
 import sys
 from setup.lib.korflab import readfasta
 
 #Real
 utr5 = {}
 cds = {}
-data = {}
+data = []
 window = int(sys.argv[3])
 for i in readfasta(sys.argv[1]):
 	name = i[0].split()[0]
@@ -14,16 +15,16 @@ for i in readfasta(sys.argv[1]):
 for i in readfasta(sys.argv[2]):
 	name = i[0].split()[0]
 	sequence = i[1][:3+window]
-	if sequence[:3] != "ATG": continue
-	else: cds[name] = sequence
+	if sequence[:3] == "ATG": cds[name] = sequence
 for key, value in utr5.items():
-	if key in list(cds.keys()): data[key] = utr5[key] + cds[key]
+	if key in list(cds.keys()): data.append(key + "|" + utr5[key] + cds[key] + "\n")
+for i in data:
+	if i[5:8] != "ATG": data.remove(i)
+data = random.sample(data, 1000)
 with open('real_kozac.txt', 'w') as f:
 	counter = 0
-	for key, value in data.items():
-		counter += 1
-		text = key + "|" + value + "\n"
-		f.write(text)
+	for i in data:
+		f.write(i)
 print(counter)
 
 #Fake ATG from coding region
@@ -37,7 +38,7 @@ for i in readfasta(sys.argv[2]):
 			kozac = seq[j-window:j+3+window]
 			text = name + "|" + kozac + "\n"
 			false_data.append(text)
-counter = 0
+false_data = random.sample(false_data, 1000)
 with open('fake_kozac.txt', 'w') as f:
 	for i in false_data:
 		f.write(i)
