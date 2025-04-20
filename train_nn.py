@@ -8,7 +8,7 @@ parser.add_argument("fake_data", type=str, help="Path to data contaiing fake koz
 parser.add_argument("ground_truth", type=str, help="Path to data containing all known kozac sequences")
 parser.add_argument("--encoder", type=str, default="pwm", help="How you want to numerically encode the data (pwm, binary, one_hot)")
 parser.add_argument("--train_proportion", type=float, default=.75, help="Percentage of data you want in the training set")
-parser.add_argument("--unts", type=int, default=64, help="Number of units in each hidden layer")
+parser.add_argument("--units", type=int, default=64, help="Number of units in each hidden layer")
 parser.add_argument("--activation",type=str, default="relu", help="Activation function")
 parser.add_argument("--batches", type=int, default=256, help="Batch size")
 parser.add_argument("--epochs", type=int, default=100, help="Number of epochs")
