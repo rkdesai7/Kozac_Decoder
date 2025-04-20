@@ -53,6 +53,7 @@ def one_hot_encode(real, fake):
 	})
 		
 	data = pd.concat([expanded_df, y], axis=1)
+	data = data.dropna()
 	return data
 
 def binary_encode(real, fake):
@@ -71,6 +72,7 @@ def binary_encode(real, fake):
 	})
 		
 	data = pd.concat([expanded_df, y], axis=1)
+	data = data.dropna()
 	return data
 
 def pwm_encode(real, fake, ground_truth):
@@ -88,6 +90,7 @@ def pwm_encode(real, fake, ground_truth):
 			if value == 'C': X.loc[index, col] = frequencies[col_num][3]
 		col_num += 1
 	data = pd.concat([X, y], axis=1)
+	data = data.dropna()
 	return data
 		
 
@@ -120,8 +123,7 @@ def train_test_split(df, percentage):
 	"""Split data into training and validation"""
 	train_df = df.sample(frac = percentage, random_state = 4)
 	val_df = df.drop(train_df.index)
-	
-	print(train_df.isna().any().any())
+
 	X_train = tf.convert_to_tensor(train_df.iloc[:,:-1].astype(float))
 	X_val = tf.convert_to_tensor(val_df.iloc[:,:-1].astype(float))
 	y_train = tf.convert_to_tensor(train_df.iloc[:,-1].astype(float))
