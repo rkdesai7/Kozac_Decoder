@@ -140,6 +140,8 @@ def train_nn(real, fake, ground_truth):
 		tf.keras.layers.Dense(units=arg.units, activation=arg.activation, input_shape=input_shape),
 		tf.keras.layers.Dense(units=arg.units, activation=arg.activation),
 		tf.keras.layers.Dense(units=1, activation="sigmoid")])
+		
+	optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
 	model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 	
 	losses = model.fit(X_train, y_train, validation_data=(X_val, y_val), batch_size=arg.batches, epochs=arg.epochs)
