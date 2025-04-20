@@ -10,7 +10,7 @@ parser.add_argument("--encoder", type=str, default="pwm", help="How you want to 
 parser.add_argument("--train_proportion", type=float, default=.75, help="Percentage of data you want in the training set")
 parser.add_argument("--units", type=int, default=64, help="Number of units in each hidden layer")
 parser.add_argument("--activation",type=str, default="relu", help="Activation function")
-parser.add_argument("--batches", type=int, default=256, help="Batch size")
+parser.add_argument("--batches", type=int, default=50, help="Batch size")
 parser.add_argument("--epochs", type=int, default=100, help="Number of epochs")
 
 arg = parser.parse_args()
@@ -140,7 +140,7 @@ def train_nn(real, fake, ground_truth):
 		tf.keras.layers.Dense(units=arg.units, activation=arg.activation, input_shape=input_shape),
 		tf.keras.layers.Dense(units=arg.units, activation=arg.activation),
 		tf.keras.layers.Dense(units=1, activation="sigmoid")])
-	model.compile(optimizer='adam', loss='mae')
+	model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 	
 	losses = model.fit(X_train, y_train, validation_data=(X_val, y_val), batch_size=arg.batches, epochs=arg.epochs)
 	loss_df = pd.DataFrame(losses.history)
