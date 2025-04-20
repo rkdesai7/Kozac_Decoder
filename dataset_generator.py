@@ -17,7 +17,7 @@ for i in readfasta(sys.argv[2]):
 	sequence = i[1][:3+window]
 	if sequence[:3] == "ATG": cds[name] = sequence
 for key, value in utr5.items():
-	if key in list(cds.keys()): data.append(key + "|" + utr5[key] + cds[key] + "\n")
+	if key in cds: data.append(key + "|" + utr5[key] + cds[key] + "\n")
 for i in data:
 	if i[5:8] != "ATG": data.remove(i)
 data = random.sample(data, 1000)

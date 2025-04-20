@@ -144,7 +144,8 @@ def train_nn(real, fake, ground_truth):
 	
 	losses = model.fit(X_train, y_train, validation_data=(X_val, y_val), batch_size=arg.batches, epochs=arg.epochs)
 	loss_df = pd.DataFrame(losses.history)
-	loss_df.loc[:,['loss','val_loss']].plot()
+	ax = loss_df.loc[:,['loss','val_loss']].plot()
+	ax.set_title(f"Training Metrics for {arg.encoder} encoding")
 	
 	return model
 
