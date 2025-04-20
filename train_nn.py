@@ -120,10 +120,10 @@ def train_test_split(df, percentage):
 	train_df = df.sample(frac = percentage, random_state = 4)
 	val_df = df.drop(train_df.index)
 	
-	X_train = tf.convert_to_tensor(train_df.iloc[:,:-1])
-	X_val = tf.convert_to_tensor(val_df.iloc[:,:-1])
-	y_train = tf.convert_to_tensor(train_df.iloc[:,-1])
-	y_val = tf.convert_to_tensor(val_df.iloc[:,-1])
+	X_train = tf.convert_to_tensor(train_df.iloc[:,:-1].astype(float))
+	X_val = tf.convert_to_tensor(val_df.iloc[:,:-1].astype(float))
+	y_train = tf.convert_to_tensor(train_df.iloc[:,-1].astype(float))
+	y_val = tf.convert_to_tensor(val_df.iloc[:,-1].astype(float))
 	input_shape = [X_train.shape[1]]
 	
 	return X_train, X_val, y_train, y_val, input_shape
