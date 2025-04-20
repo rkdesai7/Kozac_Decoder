@@ -139,7 +139,7 @@ def train_nn(real, fake, ground_truth):
 	model = tf.keras.Sequential([
 		tf.keras.layers.Dense(units=arg.units, activation=arg.activation, input_shape=input_shape),
 		tf.keras.layers.Dense(units=arg.units, activation=arg.activation),
-		tf.keras.layers.Dense(units=1, activation=sigmoid)])
+		tf.keras.layers.Dense(units=1, activation="sigmoid")])
 	model.compile(optimizer='adam', loss='mae')
 	
 	losses = model.fit(X_train, y_train, validation_data=(X_val, y_val), batch_size=arg.batches, epochs=arg.epochs)
