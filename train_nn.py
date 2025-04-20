@@ -122,7 +122,7 @@ def train_test_split(df, percentage):
 	val_df = df.drop(train_df.index)
 	
 	X_train = tf.convert_to_tensor(train_df.iloc[:,:-1].astype(float))
-	print(np.isnan(X_train).any())
+	print(np.isnan(train_df.iloc[:,:-1].astype(float)).any())
 	X_val = tf.convert_to_tensor(val_df.iloc[:,:-1].astype(float))
 	print(np.isnan(X_val).any())
 	y_train = tf.convert_to_tensor(train_df.iloc[:,-1].astype(float))
