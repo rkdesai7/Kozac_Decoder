@@ -1,4 +1,5 @@
 import argparse
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 
@@ -121,9 +122,13 @@ def train_test_split(df, percentage):
 	val_df = df.drop(train_df.index)
 	
 	X_train = tf.convert_to_tensor(train_df.iloc[:,:-1].astype(float))
+	print(np.isnan(X_train).any())
 	X_val = tf.convert_to_tensor(val_df.iloc[:,:-1].astype(float))
+	print(np.isnan(X_val).any())
 	y_train = tf.convert_to_tensor(train_df.iloc[:,-1].astype(float))
+	print(np.isnan(y_train).any())
 	y_val = tf.convert_to_tensor(val_df.iloc[:,-1].astype(float))
+	print(np.isnan(y_val).any())
 	input_shape = [X_train.shape[1]]
 	
 	return X_train, X_val, y_train, y_val, input_shape
@@ -142,7 +147,7 @@ def train_nn(real, fake, ground_truth):
 		tf.keras.layers.Dense(units=1, activation="sigmoid")])
 		
 	optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
-	model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+	model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
 	
 	losses = model.fit(X_train, y_train, validation_data=(X_val, y_val), batch_size=arg.batches, epochs=arg.epochs)
 	loss_df = pd.DataFrame(losses.history)
