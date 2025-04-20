@@ -1,7 +1,6 @@
+import argparse
 import encode_data
 
-data = encode_data.one_hot_encode("/home/rkdesai7/Documents/Kozac_Decoder/real_kozac.txt","/home/rkdesai7/Documents/Kozac_Decoder/fake_kozac.txt",)
-print(data)
-data = encode_data.extract_data("/home/rkdesai7/Documents/Kozac_Decoder/real_kozac.txt","/home/rkdesai7/Documents/Kozac_Decoder/fake_kozac.txt",)
-print(data)
+parser = ArgumentParser(description="Trains a neural network to identify kozac consensus sequence")
+parser.add_argument("--encoder", type=str, default="binary", help="How you want to encode data (one_hot, binary, frequency)")
 

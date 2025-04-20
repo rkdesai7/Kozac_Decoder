@@ -1,6 +1,21 @@
+import argparse
 import pandas as pd
+import tensorflow as tf
 
-def extract_data(real_data, false_data):
+parser = argparse.ArgumentParser(description = "Trains a neural network to identify the kozac sequence")
+parser.add_argument("real_data", type=str, help="Path to data containing a sample real kozac sequences")
+parser.add_argument("fake_data", type=str, help="Path to data contaiing fake kozac sequences")
+parser.add_argument("ground_truth", type=str, help="Path to data containing all known kozac sequences")
+parser.add_argument("--encoder", type=str, default="pwm", help="How you want to numerically encode the data (pwm, binary, one_hot)")
+parser.add_argument("--train_proportion", type=float, default=.75, help="Percentage of data you want in the training set")
+parser.add_argument("--unts", type=int, default=64, help="Number of units in each hidden layer")
+parser.add_argument("--activation",type=str, default="relu", help="Activation function")
+parser.add_argument("--batches", type=int, default=256, help="Batch size")
+parser.add_argument("--epochs", type=int, default=100, help="Number of epochs")
+
+arg = parser.parse_args()
+
+def data_to_df(real_data, false_data):
 	"""Compile real and fake data into pandas dataframe"""
 	data = []
 	#real
@@ -23,7 +38,7 @@ def extract_data(real_data, false_data):
 
 def one_hot_encode(real, fake):
 	"""Perform one hot encoding"""
-	data = extract_data(real, fake)
+	data = data_to_df(real, fake)
 	mappings = {'A': '1000', 'T': '0100', 'G': '0010', 'C': '0001'}
 	data.columns = [f'pos{i+1}' for i in range(data.shape[1] - 1)] + ["y"]
 	X = data.iloc[:, :-1].copy()
@@ -41,7 +56,7 @@ def one_hot_encode(real, fake):
 
 def binary_encode(real, fake):
 	"""Perform binary encoding"""
-	data = extract_data(real, fake)
+	data = data_to_df(real, fake)
 	mappings = {'A': '00', 'T': '01', 'G': '10', 'C': '11'}
 	data.columns = [f'pos{i+1}' for i in range(data.shape[1] - 1)] + ["y"]
 	X = data.iloc[:, :-1].copy()
@@ -57,10 +72,10 @@ def binary_encode(real, fake):
 	data = pd.concat([expanded_df, y], axis=1)
 	return data
 
-def probability_encode(real, fake, ground_truth):
+def pwm_encode(real, fake, ground_truth):
 	"""Perform encoding using the observed probability of a base being in a particular position"""
-	frequencies = get_probabilities(ground_truth)
-	data = extract_data(real, fake)
+	frequencies = gen_pwm(ground_truth)
+	data = data_to_df(real, fake)
 	col_num = 0
 	X = data.iloc[:, :-1].copy()
 	y = data.iloc[:, -1].copy()
@@ -75,7 +90,7 @@ def probability_encode(real, fake, ground_truth):
 	return data
 		
 
-def get_probabilities(full_data):
+def gen_pwm(full_data):
 	"""Return probabilities of a base being in a particular position based on an entire kozac dataset"""
 	sequences = []
 	with open(full_data, "r") as file:
@@ -99,3 +114,43 @@ def get_probabilities(full_data):
 		for index, item in enumerate(i):
 			counts[ind][index] = item/total
 	return counts
+
+def train_test_split(df, percentage):
+	"""Split data into training and validation"""
+	train_df = df.sample(frac = percentage, random_state = 4)
+	val_df = df.drop(train_df.index)
+	
+	X_train = train_df.iloc[:,:-1]
+	X_val = val_df.iloc[:,:-1]
+	y_train = train_df.iloc[:,-1]
+	y_val = val_df.iloc[:,-1]
+	input_shape = [X_train.shape[1]]
+	
+	return X_train, X_val, y_train, y_val, input_shape
+	
+def train_nn(real, fake, ground_truth):
+	"""Train neural network"""
+	if arg.encoder == "one_hot": data = one_hot_encode(real, fake)
+	if arg.encoder == "binary": data = binary_encode(real, fake)
+	if arg.encoder == "pwm": data = pwm_encode(real, fake, ground_truth)
+	
+	X_train, X_val, y_train, y_val, input_shape = train_test_split(data, arg.train_proportion)
+	
+	model = tf.keras.Sequential([
+		tf.keras.layers.Dense(units=arg.units, activation=arg.activation, input_shape=input_shape),
+		tf.keras.layers.Dense(units=arg.units, activation=arg.activation),
+		tf.keras.layers.Dense(units=1, activation=sigmoid)])
+	model.compile(optimizer='adam', loss='mae')
+	
+	losses = model.fit(X_train, y_train, validation_data=(X_val, y_val), batch_size=arg.batches, epochs=arg.epochs)
+	loss_df = pd.DataFrame(losses.history)
+	loss_df.loc[:,['loss','val_loss']].plot()
+	
+	return model
+
+
+model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth)
+ 
+	
+	
+	
