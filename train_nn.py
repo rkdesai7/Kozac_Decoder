@@ -121,14 +121,12 @@ def train_test_split(df, percentage):
 	train_df = df.sample(frac = percentage, random_state = 4)
 	val_df = df.drop(train_df.index)
 	
+	print(train_df)
 	X_train = tf.convert_to_tensor(train_df.iloc[:,:-1].astype(float))
-	print(np.isnan(train_df.iloc[:,:-1].astype(float)).any())
 	X_val = tf.convert_to_tensor(val_df.iloc[:,:-1].astype(float))
-	print(np.isnan(X_val).any())
 	y_train = tf.convert_to_tensor(train_df.iloc[:,-1].astype(float))
-	print(np.isnan(y_train).any())
 	y_val = tf.convert_to_tensor(val_df.iloc[:,-1].astype(float))
-	print(np.isnan(y_val).any())
+
 	input_shape = [X_train.shape[1]]
 	
 	return X_train, X_val, y_train, y_val, input_shape
