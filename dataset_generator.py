@@ -1,3 +1,4 @@
+import matplotlib
 import random
 import sys
 from setup.lib.korflab import readfasta
