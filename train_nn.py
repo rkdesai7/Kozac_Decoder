@@ -163,7 +163,7 @@ def train_nn(real, fake, ground_truth):
 	data = shuffle(data, random_state=42)
 	X = data.iloc[:, :-1].astype(float).to_numpy()
 	y = data.iloc[:, -1].astype(float).to_numpy()
-	kf = KFold(n_split=arg.k, shuffle=True, random_state=42)
+	kf = KFold(n_splits=arg.k, shuffle=True, random_state=42)
 	
 	#metrics to track
 	best_accuracy = 0
