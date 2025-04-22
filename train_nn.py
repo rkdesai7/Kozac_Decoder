@@ -148,7 +148,7 @@ def evaluate_model(model, X_val, y_val, fold):
 	bias = np.means((predictions-y_val)**2)
 	variance = np.var(predictions)
 	
-	print(f"Fold {fold} metrics: accuracy: {acc.4f} | bias: {bias.4f} | variance: {variance.4f}")
+	print(f"Fold {fold} metrics: accuracy: {acc:.4f} | bias: {bias:.4f} | variance: {variance:.4f}")
 	
 	return acc, bias, variance
 	
