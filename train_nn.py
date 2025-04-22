@@ -1,4 +1,3 @@
-import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -13,9 +12,10 @@ parser = argparse.ArgumentParser(description = "Trains a neural network to ident
 parser.add_argument("real_data", type=str, help="Path to data containing a sample real kozac sequences")
 parser.add_argument("fake_data", type=str, help="Path to data contaiing fake kozac sequences")
 parser.add_argument("ground_truth", type=str, help="Path to data containing all known kozac sequences")
-parser.add_argument("--encoder", type=str, default="pwm", help="How you want to numerically encode the data (pwm, binary, one_hot)")
+parser.add_argument("--encoder", type=str, default="mm1", help="How you want to numerically encode the data (pwm, binary, one_hot, mm1)")
+parser.add_argument("--model_type", type=str, default="nn", help="Which model you want to build (nn, svm, lstm)")
 parser.add_argument("--train_proportion", type=float, default=.75, help="Percentage of data you want in the training set")
-parser.add_argument("--units", type=int, default=30, help="Number of units in each hidden layer")
+parser.add_argument("--units", type=int, default=9, help="Number of units in each hidden layer")
 parser.add_argument("--activation",type=str, default="relu", help="Activation function")
 parser.add_argument("--batches", type=int, default=50, help="Batch size")
 parser.add_argument("--epochs", type=int, default=100, help="Number of epochs")
@@ -83,6 +83,84 @@ def binary_encode(real, fake):
 		
 	data = pd.concat([expanded_df, y], axis=1)
 	data = data.dropna()
+	
+	return data
+	
+def build_mm1(ground_truth):
+	"""builds first order Markov Model for identifying ATG kozac consensus"""
+	transitions = {
+		'A': {'A': 0, 'T': 0, 'G': 0, 'C': 0},
+		'T': {'A': 0, 'T': 0, 'G': 0, 'C': 0},
+		'G': {'A': 0, 'T': 0, 'G': 0, 'C': 0},
+		'C': {'A': 0, 'T': 0, 'G': 0, 'C': 0}}
+		
+	sequences = []
+	with open(ground_truth, 'r') as f:
+		for line in f:
+			line = line.strip().split("|")
+			if line[1][5:8] != "ATG": continue
+			sequences.append(line[1])
+		
+	for seq in sequences:
+		for i in range(len(seq) - 1):
+			curr, next = seq[i], seq[i+1]
+			transitions[curr][next] += 1
+			
+	mm1 = {}
+	for curr in 'ACGT':
+		total = sum(transitions[curr].values())
+		mm1[curr] = {}
+		for next in 'ACGT':
+			if total > 0: prob = transitions[curr][next]/total
+			else: prob = 0
+			mm1[curr][next] = prob
+			
+	return mm1
+
+def convert_seq_to_transition_probs(seq, mm1):
+	"""get sequence in terms of probabilities of each transition"""
+	transitions = []
+	for index, i in enumerate(seq):
+		if index == len(seq) - 1: break
+		transitions.append(list(seq[index:index+2]))
+	
+	transition_probs = []
+	for i in transitions:
+		curr = i[0]
+		next = i[1]
+		transition_probs.append(mm1[curr][next])
+		
+	return transition_probs
+	
+def mm1_encode(real, fake, ground_truth):
+	"""encode data based on transition probability from base to base using mm1"""
+	mm1 = build_mm1(arg.ground_truth)
+	
+	#real
+	real_data = []
+	with open(real, "r") as f:
+		for line in f:
+			sequence = line.strip().split('|')[1]
+			if sequence[5:8] != "ATG": continue
+			encoded_sequence = convert_seq_to_transition_probs(sequence, mm1)
+			
+			#add y val (1)
+			encoded_sequence.append(1)
+			real_data.append(encoded_sequence)
+	
+	#fake
+	fake_data = []
+	with open(fake, "r") as f:
+		for line in f:
+			sequence = line.strip().split('|')[1]
+			if sequence[5:8] != "ATG": continue
+			encoded_sequence = convert_seq_to_transition_probs(sequence, mm1)
+			
+			#add y val (0)
+			encoded_sequence.append(0)
+			fake_data.append(encoded_sequence)
+			
+	data = pd.DataFrame(real_data + fake_data)
 	
 	return data
 
@@ -160,6 +238,7 @@ def train_nn(real, fake, ground_truth):
 	if arg.encoder == "one_hot": data = one_hot_encode(real, fake)
 	if arg.encoder == "binary": data = binary_encode(real, fake)
 	if arg.encoder == "pwm": data = pwm_encode(real, fake, ground_truth)
+	if arg.encoder == "mm1": data = mm1_encode(real, fake, ground_truth)
 	
 	#prepare
 	data = shuffle(data, random_state=42)
@@ -211,9 +290,18 @@ def train_nn(real, fake, ground_truth):
 	best_model.save(f"model_{arg.encoder}_encoded.keras")
 	
 	return best_model
-
-model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth)
- 
+	
+def train_svm(real, fake, ground_truth):
+	"""trains support vector machine model"""
+	return
+	
+def train_lstm(real, fake, ground_truth):
+	"""trains lstm model"""
+	return
+	
+if arg.model_type = "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth)
+if arg.model_type = "svm": model = train_svm(arg.real_data, arg.fake_data, arg.ground_truth)
+if arg.model_type = "lstm": model = train_lstm(arg.real_data, arg.fake_data, arg.ground_truth)
 	
 	
 	
