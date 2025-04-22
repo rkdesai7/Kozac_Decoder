@@ -11,3 +11,4 @@ Supported Data Encoding Methods:
 - Binary Encoding
 - One Hot Encoding
 - Position Weight Matrix Probabilities
+- Transition Probabilities Using MM1 (builds MM1 from ground truth)
