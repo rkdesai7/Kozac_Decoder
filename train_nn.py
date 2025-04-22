@@ -188,7 +188,6 @@ def train_nn(real, fake, ground_truth):
 			tf.keras.layers.Dense(units=arg.units, activation=arg.activation, input_shape=input_shape),
 			tf.keras.layers.Dense(units=arg.units, activation=arg.activation),
 			tf.keras.layers.Dense(units=arg.units, activation=arg.activation),
-			tf.keras.layers.Dense(units=arg.units, activation=arg.activation),
 			tf.keras.layers.Dense(units=1, activation="sigmoid")])
 		
 		#compile and train
@@ -209,7 +208,7 @@ def train_nn(real, fake, ground_truth):
 	#final assesment and outputs
 	print(f"\n Best model metrics across {arg.k} folds:\n accuracy: {best_accuracy:.4f}\nbias: {best_bias:.4f}\nvariance: {best_var:.4f}")
 	plot_training_metrics(losses)
-	best_model.save(f"model_{arg.encoder}_encoded.h5")
+	best_model.save(f"model_{arg.encoder}_encoded.keras")
 	
 	return best_model
 
