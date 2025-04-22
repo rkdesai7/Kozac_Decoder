@@ -1,6 +1,7 @@
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 import pandas as pd
 import tensorflow as tf
 
@@ -21,6 +22,7 @@ parser.add_argument("--epochs", type=int, default=100, help="Number of epochs")
 parser.add_argument("--k", type=int, default=10, help="Number of folds for cross validation")
 
 arg = parser.parse_args()
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 def data_to_df(real_data, false_data):
 	"""Compile real and fake data into pandas dataframe"""
@@ -145,7 +147,7 @@ def evaluate_model(model, X_val, y_val, fold):
 	predictions = model.predict(X_val).flatten()
 	y_pred = (predictions > 0.5).astype(int)
 	acc = accuracy_score(y_val, y_pred)
-	bias = np.means((predictions-y_val)**2)
+	bias = np.mean((predictions-y_val)**2)
 	variance = np.var(predictions)
 	
 	print(f"Fold {fold} metrics: accuracy: {acc:.4f} | bias: {bias:.4f} | variance: {variance:.4f}")
