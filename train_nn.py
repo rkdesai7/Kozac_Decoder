@@ -175,7 +175,7 @@ def train_nn(real, fake, ground_truth):
 	
 	#k-fold cross val
 	for train_index, val_index in kf.split(X):
-		print(f"\n Fold: {fold}/{k}")
+		print(f"\n Fold: {fold}/{arg.k}")
 		#train_test split
 		X_train, X_val = X[train_index], X[val_index]
 		y_train, y_val = y[train_index], y[val_index]
