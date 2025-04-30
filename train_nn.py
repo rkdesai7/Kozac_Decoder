@@ -228,7 +228,7 @@ def pwm_true_frequencies():
 		for index, base in enumerate(seq):
 			pwm_val = pwm[index][keys[base]]
 			prob *= pwm_val
-		total_freqs.append(probs)
+		total_freqs.append(prob)
 		
 	plt.hist(total_freqs, bins=100, color = 'red', edgecolor='black')
 	plt.title("Distribution of PWM Probs for True Kozacs")
