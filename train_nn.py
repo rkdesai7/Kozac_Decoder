@@ -208,7 +208,41 @@ def gen_pwm(full_data):
 		for index, item in enumerate(i):
 			counts[ind][index] = item/total
 	return counts
+
+def pwm_true_frequencies():
+	"""Get distribution of pwm probabilities for True"""
+	data = data_to_df(arg.real_data, arg.fake_data)
+	pwm = gen_pwm(arg.ground_truth)
 	
+	real_df = data[data[:, -1] == 1]
+	real_df = real_df.iloc[:, :-1]
+	seqs = data.agg(''.join, axis=1)
+	seqs = seqs.tolist()
+	
+	total_freqs = []
+	keys = {"A": 0, "T": 1, "G": 2, "C": 3}
+	
+	for seq in seqs:
+		prob = 1
+		for index, base in enumerate(seq):
+			pwm_val = pwm[index][keys[base]]
+			prob *= pwm_val
+		total_freqs.append(probs)
+		
+	plt.hist(total_freqs, bins=100, color = 'red', edgecolor='black')
+	plt.title("Distribution of PWM Probs for True Kozacs")
+	plt.xlabel("PWM Probability")
+	plt.ylabel("Frequency")
+	plt.savefig('pwm_true_freqs.png', dpi=300, bbox_inches='tight')
+	
+def pwm_predict():
+	"""Predict Solely Using a PWM"""
+	pwm = gen_pwm(arg.ground_truth)
+	data = data_to_df(arg.real_data, arg.fake_data)
+	
+	#generate pwm prbabilities for real_data
+	real = data[data[:,-1:] == 1]
+	fake = data[data[:,-1:] == 1]
 def plot_training_metrics(metric_data):
 	"""Plots loss and validation loss and saves graph"""
 	metric_data = pd.DataFrame(metric_data.history)
@@ -219,6 +253,10 @@ def plot_training_metrics(metric_data):
 	plt.tight_layout()
 	plt.show()
 	plt.savefig(f"training_metrics_{arg.encoder}.png")
+	
+def grid_search_optimization():
+	"""Perform grid search to optimize model parameters"""
+	return
 	
 def evaluate_model(model, X_val, y_val, fold):
 	"""Calculate accuracy, variance, and bias to evaluate model in each fold"""
@@ -299,9 +337,9 @@ def train_lstm(real, fake, ground_truth):
 	"""trains lstm model"""
 	return
 	
-if arg.model_type = "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth)
-if arg.model_type = "svm": model = train_svm(arg.real_data, arg.fake_data, arg.ground_truth)
-if arg.model_type = "lstm": model = train_lstm(arg.real_data, arg.fake_data, arg.ground_truth)
+if arg.model_type == "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth)
+if arg.model_type == "svm": model = train_svm(arg.real_data, arg.fake_data, arg.ground_truth)
+if arg.model_type == "lstm": model = train_lstm(arg.real_data, arg.fake_data, arg.ground_truth)
 	
 	
 	
