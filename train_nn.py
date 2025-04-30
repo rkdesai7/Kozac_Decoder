@@ -209,7 +209,8 @@ def gen_pwm(full_data):
 		total = sum(i)
 		for index, item in enumerate(i):
 			if total == 0: counts[ind][index] = 0
-            else:          counts[ind][index] = item/total
+			else:          counts[ind][index] = item/total
+			
 	return counts
 
 def pwm_true_frequencies():
