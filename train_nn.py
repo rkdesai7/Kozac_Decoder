@@ -230,7 +230,8 @@ def pwm_true_frequencies():
 			prob *= pwm_val
 		total_freqs.append(prob)
 		
-	plt.hist(total_freqs, bins=100, color = 'red', edgecolor='black')
+	plt.hist(total_freqs, bins=50, color = 'red', edgecolor='black')
+	plt.ticklabel_format(style="plain", axis='x')
 	plt.title("Distribution of PWM Probs for True Kozacs")
 	plt.xlabel("PWM Probability")
 	plt.ylabel("Frequency")
