@@ -197,7 +197,7 @@ def gen_pwm(full_data):
 			sequences.append(seq)
 	#ATGC
 	counts = []
-	for i in range(len(seq)):
+	for i in range(12):
 		counts.append([0, 0, 0, 0])
 	for i in sequences:
 		for index, item in enumerate(i):
@@ -208,7 +208,10 @@ def gen_pwm(full_data):
 	for ind, i in enumerate(counts): 
 		total = sum(i)
 		for index, item in enumerate(i):
-			counts[ind][index] = item/total
+            if total == 0:
+                counts[ind][index] = 0
+            else:
+                counts[ind][index] = item/total
 	return counts
 
 def pwm_true_frequencies():
@@ -244,8 +247,8 @@ def pwm_true_frequencies():
 			prob += math.log(pwm_val)
 		total_f_freqs.append(prob)
 		
-	plt.hist(total_freqs, bins=50, alpha = .5, label = 'Real', color = 'red')
-	plt.hist(total_f_freqs, bins=50, alpha = .5, label = 'Fake', color = 'blue')
+	plt.hist(total_freqs, bins=100, alpha = .5, label = 'Real', color = 'red')
+	plt.hist(total_f_freqs, bins=100, alpha = .5, label = 'Fake', color = 'blue')
 	plt.ticklabel_format(style="plain", axis='x')
 	plt.title("Distribution of PWM Probs for True Kozacs")
 	plt.xlabel("PWM Probability")
