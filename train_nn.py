@@ -232,7 +232,6 @@ def pwm_true_frequencies():
 			pwm_val = pwm[index][keys[base]]
 			if pwm_val == 0: prob += 0
 			else: 	         prob += math.log(pwm_val)
-			prob += math.log(pwm_val)
 		total_freqs.append(prob)
 		
 	fake_df = data[data.iloc[:,-1] == 0]
