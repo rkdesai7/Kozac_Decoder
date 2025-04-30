@@ -215,7 +215,7 @@ def pwm_true_frequencies():
 	data = data_to_df(arg.real_data, arg.fake_data)
 	pwm = gen_pwm(arg.ground_truth)
 	
-	real_df = data[data[:, -1] == 1]
+	real_df = data[data.iloc[:, -1] == 1]
 	real_df = real_df.iloc[:, :-1]
 	seqs = data.agg(''.join, axis=1)
 	seqs = seqs.tolist()
