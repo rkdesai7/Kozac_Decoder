@@ -13,7 +13,7 @@ parser.add_argument("real_data", type=str, help="Path to data containing a sampl
 parser.add_argument("fake_data", type=str, help="Path to data contaiing fake kozac sequences")
 parser.add_argument("ground_truth", type=str, help="Path to data containing all known kozac sequences")
 parser.add_argument("--encoder", type=str, default="mm1", help="How you want to numerically encode the data (pwm, binary, one_hot, mm1)")
-parser.add_argument("--model_type", type=str, default="nn", help="Which model you want to build (nn, svm, lstm)")
+parser.add_argument("--model_type", type=str, default="nn", help="Which model you want to build (nn, svm, lstm, pwm)")
 parser.add_argument("--train_proportion", type=float, default=.75, help="Percentage of data you want in the training set")
 parser.add_argument("--units", type=int, default=9, help="Number of units in each hidden layer")
 parser.add_argument("--activation",type=str, default="relu", help="Activation function")
@@ -239,6 +239,7 @@ def pwm_predict():
 	"""Predict Solely Using a PWM"""
 	pwm = gen_pwm(arg.ground_truth)
 	data = data_to_df(arg.real_data, arg.fake_data)
+	data["sequence"] = data[:, :-1].agg(''.join, axis=1)
 	
 	#generate pwm prbabilities for real_data
 	real = data[data[:,-1:] == 1]
@@ -340,6 +341,7 @@ def train_lstm(real, fake, ground_truth):
 if arg.model_type == "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth)
 if arg.model_type == "svm": model = train_svm(arg.real_data, arg.fake_data, arg.ground_truth)
 if arg.model_type == "lstm": model = train_lstm(arg.real_data, arg.fake_data, arg.ground_truth)
-	
+if arg.model_type == "pwm": pwm_true_frequencies()
+
 	
 	
