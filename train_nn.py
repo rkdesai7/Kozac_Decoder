@@ -214,6 +214,7 @@ def pwm_true_frequencies():
 	"""Get distribution of pwm probabilities for True"""
 	data = data_to_df(arg.real_data, arg.fake_data)
 	pwm = gen_pwm(arg.ground_truth)
+	print(pwm)
 	
 	real_df = data[data.iloc[:, -1] == 1]
 	real_df = real_df.iloc[:, :-1]
@@ -227,6 +228,7 @@ def pwm_true_frequencies():
 		prob = 1
 		for index, base in enumerate(seq):
 			pwm_val = pwm[index][keys[base]]
+			print(pwm_val)
 			prob *= pwm_val
 		total_freqs.append(prob)
 		
