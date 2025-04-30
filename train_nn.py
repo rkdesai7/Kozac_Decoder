@@ -244,7 +244,8 @@ def pwm_true_frequencies():
 		prob = math.log(1)
 		for index, base in enumerate(seq):
 			pwm_val = pwm[index][keys[base]]
-			prob += math.log(pwm_val)
+			if pwm_val == 0: prob += 0
+			else:            prob += math.log(pwm_val)
 		total_f_freqs.append(prob)
 		
 	plt.hist(total_freqs, bins=100, alpha = .5, label = 'Real', color = 'red')
