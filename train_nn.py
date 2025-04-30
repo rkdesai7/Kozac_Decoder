@@ -192,7 +192,6 @@ def gen_pwm(full_data):
 	with open(full_data, "r") as file:
 		for line in file:
 			lines = line.strip().split('|')
-			if lines[1][5:8] != "ATG": continue
 			seq = list(lines[1])
 			sequences.append(seq)
 	#ATGC
@@ -211,6 +210,7 @@ def gen_pwm(full_data):
 			if total == 0: counts[ind][index] = 0
 			else:          counts[ind][index] = item/total
 			
+	print(counts)
 	return counts
 
 def pwm_true_frequencies():
