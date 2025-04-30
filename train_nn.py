@@ -214,7 +214,6 @@ def pwm_true_frequencies():
 	"""Get distribution of pwm probabilities for True"""
 	data = data_to_df(arg.real_data, arg.fake_data)
 	pwm = gen_pwm(arg.ground_truth)
-	print(pwm)
 	
 	real_df = data[data.iloc[:, -1] == 1]
 	real_df = real_df.iloc[:, :-1]
@@ -225,18 +224,32 @@ def pwm_true_frequencies():
 	keys = {"A": 0, "T": 1, "G": 2, "C": 3}
 	
 	for seq in seqs:
-		prob = 1
+		prob = math.log(1)
 		for index, base in enumerate(seq):
 			pwm_val = pwm[index][keys[base]]
-			print(pwm_val)
-			prob *= pwm_val
+			prob += math.log(pwm_val)
 		total_freqs.append(prob)
 		
-	plt.hist(total_freqs, bins=50, color = 'red', edgecolor='black')
+	fake_df = data[data.iloc[:,-1] == 0]
+	fake_df = fake_df.iloc[:, :-1]
+	f_seqs = fake_df.agg(''.join, axis=1)
+	f_seqs = f_seqs.tolist()
+	total_f_freqs = []
+	
+	for seq in f_seqs:
+		prob = math.log(1)
+		for index, base in enumerate(seq):
+			pwm_val = pwm[index][keys[base]]
+			prob += math.log(pwm_val)
+		total_f_freqs.append(prob)
+		
+	plt.hist(total_freqs, bins=50, alpha = .5, label = 'Real', color = 'red')
+	plt.hist(total_f_freqs, bins=50, alpha = .5, label = 'Fake', color = 'blue')
 	plt.ticklabel_format(style="plain", axis='x')
 	plt.title("Distribution of PWM Probs for True Kozacs")
 	plt.xlabel("PWM Probability")
 	plt.ylabel("Frequency")
+	plt.legend()
 	plt.savefig('pwm_true_freqs.png', dpi=300, bbox_inches='tight')
 	
 def pwm_predict():
