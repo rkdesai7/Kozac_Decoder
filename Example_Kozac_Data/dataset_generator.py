@@ -61,6 +61,7 @@ def gen_fake():
 			win = seq[j:j+3]
 			if win == "ATG":
 				kozac = seq[j-arg.window:j+3+arg.window]
+				if len(kozac) != 13: continue
 				text = name + "|" + kozac + "\n"
 				data.append(text)
 	
