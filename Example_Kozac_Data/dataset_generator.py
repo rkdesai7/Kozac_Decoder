@@ -16,7 +16,7 @@ arg=parser.parse_args()
 def write_specified_size_to_file(data, file_name, size):
 	"""get specified size of data and write to a text file"""
 	for index, i in enumerate(data):
-		if i[7:10] != "ATG": del data[index]
+		if i[10:13] != "ATG": del data[index]
 		#if len(i) != 3+(2*arg.window): data.remove(i)
 	data = random.sample(data, size)
 	with open(file_name, 'w') as f:
@@ -31,7 +31,7 @@ def gen_real():
 	
 	for i in readfasta(arg.utr):
 		name = i[0].split()[0]
-		w = -1*7
+		w = -1*10
 		sequence = i[1][w:]
 		utr5[name] = sequence
 	
@@ -42,7 +42,7 @@ def gen_real():
 		
 	for key, value in utr5.items():
 		if key in cds:
-			if len(utr5[key] + cds[key]) != 12: continue
+			if len(utr5[key] + cds[key]) != 15: continue
 			data.append(key + "|" + utr5[key] + cds[key] + "\n")
 		
 	write_specified_size_to_file(data, "real_kozac.txt", arg.size_real)
@@ -60,7 +60,7 @@ def gen_fake():
 		for j in range(len(seq) - 1):
 			win = seq[j:j+3]
 			if win == "ATG":
-				kozac = seq[j-7:j+3+2]
+				kozac = seq[j-10:j+3+2]
 				text = name + "|" + kozac + "\n"
 				data.append(text)
 	
