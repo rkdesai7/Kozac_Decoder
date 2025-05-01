@@ -37,7 +37,7 @@ def gen_real():
 	
 	for i in readfasta(arg.cds):
 		name = i[0].split()[0]
-		sequence = i[1][:3+2]
+		sequence = i[1][:3+5]
 		if sequence[:3] == "ATG": cds[name] = sequence
 		
 	for key, value in utr5.items():
