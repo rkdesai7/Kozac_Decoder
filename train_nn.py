@@ -100,7 +100,6 @@ def build_mm1(ground_truth):
 	with open(ground_truth, 'r') as f:
 		for line in f:
 			line = line.strip().split("|")
-			if line[1][5:8] != "ATG": continue
 			sequences.append(line[1])
 		
 	for seq in sequences:
@@ -143,7 +142,6 @@ def mm1_encode(real, fake, ground_truth):
 	with open(real, "r") as f:
 		for line in f:
 			sequence = line.strip().split('|')[1]
-			if sequence[5:8] != "ATG": continue
 			encoded_sequence = convert_seq_to_transition_probs(sequence, mm1)
 			
 			#add y val (1)
@@ -155,7 +153,6 @@ def mm1_encode(real, fake, ground_truth):
 	with open(fake, "r") as f:
 		for line in f:
 			sequence = line.strip().split('|')[1]
-			if sequence[5:8] != "ATG": continue
 			encoded_sequence = convert_seq_to_transition_probs(sequence, mm1)
 			
 			#add y val (0)
