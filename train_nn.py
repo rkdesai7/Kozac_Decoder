@@ -115,7 +115,7 @@ def build_mm1(ground_truth):
 			if total > 0: prob = transitions[curr][next]/total
 			else: prob = 0
 			mm1[curr][next] = prob
-			
+	
 	return mm1
 
 def convert_seq_to_transition_probs(seq, mm1):
@@ -160,6 +160,7 @@ def mm1_encode(real, fake, ground_truth):
 			fake_data.append(encoded_sequence)
 			
 	data = pd.DataFrame(real_data + fake_data)
+	data = data.dropna()
 	
 	return data
 
@@ -207,7 +208,6 @@ def gen_pwm(full_data):
 			if total == 0: counts[ind][index] = 0
 			else:          counts[ind][index] = item/total
 			
-	print(counts)
 	return counts
 
 def pwm_true_frequencies():
@@ -299,6 +299,7 @@ def train_nn(real, fake, ground_truth):
 	if arg.encoder == "mm1": data = mm1_encode(real, fake, ground_truth)
 	
 	#prepare
+	print(data)
 	data = shuffle(data, random_state=42)
 	X = data.iloc[:, :-1].astype(float).to_numpy()
 	y = data.iloc[:, -1].astype(float).to_numpy()
