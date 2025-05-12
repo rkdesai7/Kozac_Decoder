@@ -258,11 +258,12 @@ def train_pwm(ground_truth, real_data, fake_data):
 	"""Predict Solely Using a PWM"""
 	pwm = gen_pwm(ground_truth)
 	data = data_to_df(real_data, fake_data)
-	data["sequence"] = data[:, :-1].agg(''.join, axis=1)
 	
 	#generate pwm prbabilities for real_data
 	real = data[data[:,-1:] == 1]
-	fake = data[data[:,-1:] == 1]
+	real = real[:, :-1].agg(''.join, axis=1)
+	fake = data[data[:,-1:] == 0]
+	fake = fake[:, :-1].agg(''.join, axis=1)
 	
 	keys = {"A": 0, "T": 1, "G": 2, "C": 3}
 	scores = {'TP': 0, 'TN': 0, 'FP': 0, 'FN': 0}
