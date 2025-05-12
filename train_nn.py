@@ -194,7 +194,7 @@ def gen_pwm(full_data):
 			sequences.append(seq)
 	#ATGC
 	counts = []
-	for i in range(12):
+	for i in range(len(seq)):
 		counts.append([0, 0, 0, 0])
 	for i in sequences:
 		for index, item in enumerate(i):
