@@ -258,6 +258,7 @@ def train_pwm(ground_truth, real_data, fake_data):
 	"""Predict Solely Using a PWM"""
 	pwm = gen_pwm(ground_truth)
 	data = data_to_df(real_data, fake_data)
+	data.dropna()
 	
 	#generate pwm prbabilities for real_data
 	real = data[data[:,-1:] == 1]
