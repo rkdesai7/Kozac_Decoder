@@ -254,15 +254,40 @@ def pwm_true_frequencies():
 	plt.legend()
 	plt.savefig('pwm_true_freqs.png', dpi=300, bbox_inches='tight')
 	
-def pwm_predict():
+def train_pwm(ground_truth, real_data, fake_data):
 	"""Predict Solely Using a PWM"""
-	pwm = gen_pwm(arg.ground_truth)
-	data = data_to_df(arg.real_data, arg.fake_data)
+	pwm = gen_pwm(ground_truth)
+	data = data_to_df(real_data, fake_data)
 	data["sequence"] = data[:, :-1].agg(''.join, axis=1)
 	
 	#generate pwm prbabilities for real_data
 	real = data[data[:,-1:] == 1]
 	fake = data[data[:,-1:] == 1]
+	
+	keys = {"A": 0, "T": 1, "G": 2, "C": 3}
+	scores = {'TP': 0, 'TN': 0, 'FP': 0, 'FN': 0}
+	
+	for seq in real:
+		prob = 1
+		for x, base in enumerate(seq):
+			index = keys[base]
+			prob *= pwm[x][index]
+		if prob > .5: scores['TP'] += 1
+		else:         scores['FN'] += 1
+	
+	for seq in fake:
+		prob = 1
+		for x, base in enumerate(seq):
+			index = keys[base]
+			prob *= pwm[x][index]
+		if prob > .5: scores['FP'] += 1
+		else:         scores['TN'] += 1
+		
+	accuracy = (scores['TN'] + scores['TP'])/ (scores['FP'] + scores['FN'] + scores['TN'] + scores['TP'])
+	print(f"PWM Accuracy: {accuracy}")
+	return accuracy 
+			
+	
 def plot_training_metrics(metric_data):
 	"""Plots loss and validation loss and saves graph"""
 	metric_data = pd.DataFrame(metric_data.history)
@@ -290,7 +315,7 @@ def evaluate_model(model, X_val, y_val, fold):
 	
 	return acc, bias, variance
 	
-def train_nn(real, fake, ground_truth):
+def train_nn(real, fake, ground_truth, units, activation, batches, epochs):
 	"""Train neural network"""
 	#specify encoder
 	if arg.encoder == "one_hot": data = one_hot_encode(real, fake)
@@ -323,14 +348,15 @@ def train_nn(real, fake, ground_truth):
 	
 		#model schematics
 		model = tf.keras.Sequential([
-			tf.keras.layers.Dense(units=arg.units, activation=arg.activation, input_shape=input_shape),
-			tf.keras.layers.Dense(units=arg.units, activation=arg.activation),
-			tf.keras.layers.Dense(units=arg.units, activation=arg.activation),
+			tf.keras.layers.Dense(units=units, activation=activation, input_shape=input_shape),
+			tf.keras.layers.Dense(units=units, activation=activation),
+			tf.keras.layers.Dense(units=units, activation=activation),
+			tf.keras.layers.Dense(units=units, activation=activation),
 			tf.keras.layers.Dense(units=1, activation="sigmoid")])
 		
 		#compile and train
 		model.compile(optimizer="adam", loss='binary_crossentropy', metrics=['accuracy'])
-		losses = model.fit(X_train, y_train, validation_data=(X_val, y_val), batch_size=arg.batches, epochs=arg.epochs, verbose = 0)
+		losses = model.fit(X_train, y_train, validation_data=(X_val, y_val), batch_size=batches, epochs=epochs, verbose = 0)
 		acc, bias, variance = evaluate_model(model, X_val, y_val, fold)
 		
 		#update best metrics
@@ -358,10 +384,10 @@ def train_lstm(real, fake, ground_truth):
 	"""trains lstm model"""
 	return
 	
-if arg.model_type == "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth)
+if arg.model_type == "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth, arg.units, arg.activation, arg.batches, arg.epochs)
 if arg.model_type == "svm": model = train_svm(arg.real_data, arg.fake_data, arg.ground_truth)
 if arg.model_type == "lstm": model = train_lstm(arg.real_data, arg.fake_data, arg.ground_truth)
-if arg.model_type == "pwm": pwm_true_frequencies()
+if arg.model_type == "pwm": train_pwm(arg.ground_truth, arg.real_data, arg.fake_data)
 
 	
 	
