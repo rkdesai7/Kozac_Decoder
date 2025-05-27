@@ -2,7 +2,9 @@ import argparse
 import matplotlib
 import random
 import sys
-from setup.lib.korflab import readfasta
+import itertools
+import gzip
+import json
 
 parser = argparse.ArgumentParser(description="Extracts kozac sequence data from 5' utr and cds .gz files from a specific organism")
 parser.add_argument("cds", type=str, help="Path to cds .gz file")
@@ -14,34 +16,60 @@ parser.add_argument("--size_fake", type=int, default=1000, help="How many fake k
 
 arg=parser.parse_args()
 
+def readfasta(filename):
+	"""Simple fasta file iterator."""
+	print(type(filename))
+	name = None
+	seqs = []
+
+	fp = None
+	if   filename.endswith('.gz'): fp = gzip.open(filename, 'rt')
+	elif filename == '-':          fp = sys.stdin
+	else:                          fp = open(filename)
+
+	while True:
+		line = fp.readline()
+		if line == '': break
+		line = line.rstrip()
+		if line.startswith('>'):
+			if len(seqs) > 0:
+				seq = ''.join(seqs)
+				yield(name, seq)
+				name = line[1:]
+				seqs = []
+			else:
+				name = line[1:]
+		else:
+			seqs.append(line)
+	yield(name, ''.join(seqs))
+	fp.close()
+
 def write_specified_size_to_file(data, file_name, size):
 	"""get specified size of data and write to a text file"""
-	for index, i in enumerate(data):
-		if i[arg.upstream:arg.downstream+3] != "ATG": del data[index]
-		#if len(i) != 3+(2*arg.window): data.remove(i)
+	
 	data = random.sample(data, size)
 	with open(file_name, 'w') as f:
 		for i in data:
 			f.write(i)
 			
-def gen_real(utr, cds, upstream, downstream, size_real):
+def gen_real(utr_data, cds_data, upstream, downstream, size_real):
 	"""extracts real kozac sequences"""
 	utr5 = {}
 	cds = {}
 	data = []
 	
-	for i in readfasta(utr):
+	for i in readfasta(utr_data):
 		name = i[0].split()[0]
 		w = -1*upstream
 		sequence = i[1][w:]
 		utr5[name] = sequence
 	
-	for i in readfasta(cds):
+	for i in readfasta(cds_data):
 		name = i[0].split()[0]
 		sequence = i[1][:3+downstream]
 		if sequence[:3] == "ATG": cds[name] = sequence
 		
-	for key, value in utr5.items():
+	for key in utr5:
 		if key in cds:
 			if len(utr5[key] + cds[key]) != 3 + downstream + upstream: continue
 			data.append(key + "|" + utr5[key] + cds[key] + "\n")
@@ -55,7 +83,6 @@ def gen_fake(cds, upstream, downstream, size_fake):
 	data = []
 	
 	for i in readfasta(cds):
-		print("reading")
 		name = i[0].split()[0]
 		seq = i[1][3:]
 		for j in range(len(seq) - 1):
