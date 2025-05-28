@@ -17,6 +17,7 @@ parser.add_argument("ground_truth", type=str, help="Path to data containing all 
 parser.add_argument("--encoder", type=str, default="mm1", help="How you want to numerically encode the data (pwm, binary, one_hot, mm1)")
 parser.add_argument("--model_type", type=str, default="nn", help="Which model you want to build (nn, svm, lstm, pwm)")
 parser.add_argument("--train_proportion", type=float, default=.75, help="Percentage of data you want in the training set")
+parser.add_argument("--hid_layer", type=int, default=3, help="Number of hidden layers")
 parser.add_argument("--units", type=int, default=9, help="Number of units in each hidden layer")
 parser.add_argument("--activation",type=str, default="relu", help="Activation function")
 parser.add_argument("--batches", type=int, default=50, help="Batch size")
@@ -317,7 +318,7 @@ def evaluate_model(model, X_val, y_val, fold):
 	
 	return acc, bias, variance
 	
-def train_nn(real, fake, ground_truth, units, activation, batches, epochs):
+def train_nn(real, fake, ground_truth, units, activation, batches, epochs, hid_layer):
 	"""Train neural network"""
 	#specify encoder
 	if arg.encoder == "one_hot": data = one_hot_encode(real, fake)
@@ -349,12 +350,10 @@ def train_nn(real, fake, ground_truth, units, activation, batches, epochs):
 		input_shape = [X_train.shape[1]]
 	
 		#model schematics
-		model = tf.keras.Sequential([
-			tf.keras.layers.Dense(units=units, activation=activation, input_shape=input_shape),
-			tf.keras.layers.Dense(units=units, activation=activation),
-			tf.keras.layers.Dense(units=units, activation=activation),
-			tf.keras.layers.Dense(units=units, activation=activation),
-			tf.keras.layers.Dense(units=1, activation="sigmoid")])
+		model_specs = [tf.keras.layers.Dense(units=units, activation=activation, input_shape=input_shape)]
+		for i in range(hid_layer): model_specs.append(tf.keras.layers.Dense(units=units, activation=activation))
+		model_specs.append(tf.keras.layers.Dense(units=1, activation="sigmoid"))
+		model = tf.keras.Sequential(model_specs)
 		
 		#compile and train
 		model.compile(optimizer="adam", loss='binary_crossentropy', metrics=['accuracy'])
@@ -386,7 +385,7 @@ def train_lstm(real, fake, ground_truth):
 	"""trains lstm model"""
 	return
 	
-if arg.model_type == "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth, arg.units, arg.activation, arg.batches, arg.epochs)
+if arg.model_type == "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth, arg.units, arg.activation, arg.batches, arg.epochs, arg.hid_layer)
 if arg.model_type == "svm": model = train_svm(arg.real_data, arg.fake_data, arg.ground_truth)
 if arg.model_type == "lstm": model = train_lstm(arg.real_data, arg.fake_data, arg.ground_truth)
 if arg.model_type == "pwm": train_pwm(arg.ground_truth, arg.real_data, arg.fake_data)
