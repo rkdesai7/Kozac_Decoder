@@ -1,4 +1,5 @@
 import argparse
+import joblib
 import matplotlib.pyplot as plt
 import math
 import numpy as np
@@ -25,7 +26,7 @@ parser.add_argument("--activation",type=str, default="relu", help="Activation fu
 parser.add_argument("--batches", type=int, default=50, help="Batch size")
 parser.add_argument("--epochs", type=int, default=100, help="Number of epochs")
 parser.add_argument("--k", type=int, default=10, help="Number of folds for cross validation")
-parser.add_argument("--n_estimators", type=int, default=100, help="Number of forests for the Random Forest Model")
+parser.add_argument("--n_estimators", type=int, default=50, help="Number of forests for the Random Forest Model")
 
 arg = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -294,16 +295,16 @@ def train_pwm(ground_truth, real_data, fake_data):
 	return accuracy 
 			
 	
-def plot_training_metrics(metric_data):
+def plot_training_metrics(metric_data, encoder):
 	"""Plots loss and validation loss and saves graph"""
 	metric_data = pd.DataFrame(metric_data.history)
 	ax = metric_data.loc[:,['loss', 'val_loss']].plot()
-	ax.set_title("Training Metrics for {arg.encoder} encoding")
+	ax.set_title("Training Metrics for {encoder} encoding")
 	ax.set_xlabel("Epoch")
 	ax.set_ylabel("Loss")
 	plt.tight_layout()
 	plt.show()
-	plt.savefig(f"training_metrics_{arg.encoder}.png")
+	plt.savefig(f"training_metrics_{encoder}.png")
 	
 def grid_search_optimization():
 	"""Perform grid search to optimize model parameters"""
@@ -321,13 +322,13 @@ def evaluate_model(model, X_val, y_val, fold):
 	
 	return acc, bias, variance
 	
-def train_nn(real, fake, ground_truth, units, activation, batches, epochs, hid_layer, k):
+def train_nn(real, fake, ground_truth, encoder, units, activation, batches, epochs, hid_layer, k):
 	"""Train neural network"""
 	#specify encoder
-	if arg.encoder == "one_hot": data = one_hot_encode(real, fake)
-	if arg.encoder == "binary": data = binary_encode(real, fake)
-	if arg.encoder == "pwm": data = pwm_encode(real, fake, ground_truth)
-	if arg.encoder == "mm1": data = mm1_encode(real, fake, ground_truth)
+	if encoder == "one_hot": data = one_hot_encode(real, fake)
+	if encoder == "binary": data = binary_encode(real, fake)
+	if encoder == "pwm": data = pwm_encode(real, fake, ground_truth)
+	if encoder == "mm1": data = mm1_encode(real, fake, ground_truth)
 	
 	#prepare
 	print(data)
@@ -375,17 +376,17 @@ def train_nn(real, fake, ground_truth, units, activation, batches, epochs, hid_l
 		
 	#final assesment and outputs
 	print(f"\n Best model metrics across {k} folds:\n accuracy: {best_accuracy:.4f}\nbias: {best_bias:.4f}\nvariance: {best_var:.4f}")
-	plot_training_metrics(losses)
+	plot_training_metrics(losses, encoder)
 	best_model.save(f"model_{arg.encoder}_encoded.keras")
 	
 	return best_model
 	
-def train_rf(real, fake, ground_truth, n_estimators, k):
+def train_rf(real, fake, ground_truth, encoder, n_estimators, k):
 	"""Train random forest"""
-	if arg.encoder == "one_hot": data = one_hot_encode(real, fake)
-	if arg.encoder == "binary": data = binary_encode(real, fake)
-	if arg.encoder == "pwm": data = pwm_encode(real, fake, ground_truth)
-	if arg.encoder == "mm1": data = mm1_encode(real, fake, ground_truth)
+	if encoder == "one_hot": data = one_hot_encode(real, fake)
+	if encoder == "binary": data = binary_encode(real, fake)
+	if encoder == "pwm": data = pwm_encode(real, fake, ground_truth)
+	if encoder == "mm1": data = mm1_encode(real, fake, ground_truth)
 
 	data = shuffle(data, random_state=42)
 	X = data.iloc[:, :-1].astype(float).to_numpy()
@@ -418,7 +419,7 @@ def train_rf(real, fake, ground_truth, n_estimators, k):
 	
 	#final assessment
 	print(f"\n Best model metrics across {k} folds:\n accuracy: {best_accuracy:.4f}\nbias: {best_bias:.4f}\nvariance: {best_var:.4f}")
-	best_model.save(f"model_{arg.encoder}_encoded.keras")
+	joblib.dump(best_model, "rf_model.pkl")
 	
 	return best_model
 	
@@ -430,8 +431,8 @@ def train_lstm(real, fake, ground_truth):
 	"""trains lstm model"""
 	return
 	
-if arg.model_type == "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth, arg.units, arg.activation, arg.batches, arg.epochs, arg.hid_layer, arg.k)
-if arg.model_type == "rf": model = train_rf(arg.real_data, arg.fake_data, arg.ground_truth, arg.n_estimators, arg.k)
+if arg.model_type == "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth, arg.encoder, arg.units, arg.activation, arg.batches, arg.epochs, arg.hid_layer, arg.k)
+if arg.model_type == "rf": model = train_rf(arg.real_data, arg.fake_data, arg.ground_truth, arg.encoder, arg.n_estimators, arg.k)
 if arg.model_type == "svm": model = train_svm(arg.real_data, arg.fake_data, arg.ground_truth)
 if arg.model_type == "lstm": model = train_lstm(arg.real_data, arg.fake_data, arg.ground_truth)
 if arg.model_type == "pwm": train_pwm(arg.ground_truth, arg.real_data, arg.fake_data)
