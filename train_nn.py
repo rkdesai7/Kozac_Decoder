@@ -6,15 +6,17 @@ import os
 import pandas as pd
 import tensorflow as tf
 
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 from sklearn.utils import shuffle
-from sklearn.metrics import accuracy_score
+
 
 parser = argparse.ArgumentParser(description = "Trains a neural network to identify the kozac sequence")
 parser.add_argument("real_data", type=str, help="Path to data containing a sample real kozac sequences")
 parser.add_argument("fake_data", type=str, help="Path to data contaiing fake kozac sequences")
 parser.add_argument("ground_truth", type=str, help="Path to data containing all known kozac sequences")
-parser.add_argument("--encoder", type=str, default="mm1", help="How you want to numerically encode the data (pwm, binary, one_hot, mm1)")
+parser.add_argument("--encoder", type=str, default="mm1", help="How you want to numerically encode the data (pwm, binary, one_hot, mm1, rf)")
 parser.add_argument("--model_type", type=str, default="nn", help="Which model you want to build (nn, svm, lstm, pwm)")
 parser.add_argument("--train_proportion", type=float, default=.75, help="Percentage of data you want in the training set")
 parser.add_argument("--hid_layer", type=int, default=3, help="Number of hidden layers")
@@ -23,6 +25,7 @@ parser.add_argument("--activation",type=str, default="relu", help="Activation fu
 parser.add_argument("--batches", type=int, default=50, help="Batch size")
 parser.add_argument("--epochs", type=int, default=100, help="Number of epochs")
 parser.add_argument("--k", type=int, default=10, help="Number of folds for cross validation")
+paser.add_argument("--n_estimators", type=int, default=100, help="Number of forests for the Random Forest Model")
 
 arg = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -318,7 +321,7 @@ def evaluate_model(model, X_val, y_val, fold):
 	
 	return acc, bias, variance
 	
-def train_nn(real, fake, ground_truth, units, activation, batches, epochs, hid_layer):
+def train_nn(real, fake, ground_truth, units, activation, batches, epochs, hid_layer, k):
 	"""Train neural network"""
 	#specify encoder
 	if arg.encoder == "one_hot": data = one_hot_encode(real, fake)
@@ -331,7 +334,7 @@ def train_nn(real, fake, ground_truth, units, activation, batches, epochs, hid_l
 	data = shuffle(data, random_state=42)
 	X = data.iloc[:, :-1].astype(float).to_numpy()
 	y = data.iloc[:, -1].astype(float).to_numpy()
-	kf = KFold(n_splits=arg.k, shuffle=True, random_state=42)
+	kf = KFold(n_splits=k, shuffle=True, random_state=42)
 	
 	#metrics to track
 	best_accuracy = 0
@@ -343,7 +346,7 @@ def train_nn(real, fake, ground_truth, units, activation, batches, epochs, hid_l
 	
 	#k-fold cross val
 	for train_index, val_index in kf.split(X):
-		print(f"\n Fold: {fold}/{arg.k}")
+		print(f"\n Fold: {fold}/{k}")
 		#train_test split
 		X_train, X_val = X[train_index], X[val_index]
 		y_train, y_val = y[train_index], y[val_index]
@@ -371,8 +374,52 @@ def train_nn(real, fake, ground_truth, units, activation, batches, epochs, hid_l
 		fold += 1
 		
 	#final assesment and outputs
-	print(f"\n Best model metrics across {arg.k} folds:\n accuracy: {best_accuracy:.4f}\nbias: {best_bias:.4f}\nvariance: {best_var:.4f}")
+	print(f"\n Best model metrics across {k} folds:\n accuracy: {best_accuracy:.4f}\nbias: {best_bias:.4f}\nvariance: {best_var:.4f}")
 	plot_training_metrics(losses)
+	best_model.save(f"model_{arg.encoder}_encoded.keras")
+	
+	return best_model
+	
+def train_rf(real, fake, ground_truth, n_estimators, k):
+	"""Train random forest"""
+	if arg.encoder == "one_hot": data = one_hot_encode(real, fake)
+	if arg.encoder == "binary": data = binary_encode(real, fake)
+	if arg.encoder == "pwm": data = pwm_encode(real, fake, ground_truth)
+	if arg.encoder == "mm1": data = mm1_encode(real, fake, ground_truth)
+
+	data = shuffle(data, random_state=42)
+	X = data.iloc[:, :-1].astype(float).to_numpy()
+	y = data.iloc[:, -1].astype(float).to_numpy()
+	kf = KFold(n_splits = k, shuffle=True, random_state=42)
+
+	#metrics
+	best_accuracy = 0
+	best_model = None
+	best_losses = None
+	best_bias = 0
+	best_var = 0
+	fold = 1
+	
+	#k-fold cross val:	
+	for train_index, val_index in kf.split(X):
+		print(f"\n Fold: {fold}/{k}")
+		X_train, X_val = X[train_index], X[val_index]
+		y_train, y_val = y[train_index], y[val_index]
+		
+		model = RandomForestClassifier(n_estimators = n_estimators, random_state=42)
+		model.fit(X_train, y_train)
+		acc, bias, variance = evaluate_model(model, X_val, y_val, fold)
+		
+		if acc > best_accuracy:
+			best_accuracy = acc
+			best_model = model
+			best_losses = losses
+			best_bias = bias
+			best_var = variance
+		fold += 1
+	
+	#final assessment
+	print(f"\n Best model metrics across {k} folds:\n accuracy: {best_accuracy:.4f}\nbias: {best_bias:.4f}\nvariance: {best_var:.4f}")
 	best_model.save(f"model_{arg.encoder}_encoded.keras")
 	
 	return best_model
@@ -385,7 +432,8 @@ def train_lstm(real, fake, ground_truth):
 	"""trains lstm model"""
 	return
 	
-if arg.model_type == "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth, arg.units, arg.activation, arg.batches, arg.epochs, arg.hid_layer)
+if arg.model_type == "nn": model = train_nn(arg.real_data, arg.fake_data, arg.ground_truth, arg.units, arg.activation, arg.batches, arg.epochs, arg.hid_layer, arg.k)
+if arg.model_type == "rf": model = train_rf(arg.real_data, arg.fake_data, arg.ground_truth, arg.n_estimators, arg.k)
 if arg.model_type == "svm": model = train_svm(arg.real_data, arg.fake_data, arg.ground_truth)
 if arg.model_type == "lstm": model = train_lstm(arg.real_data, arg.fake_data, arg.ground_truth)
 if arg.model_type == "pwm": train_pwm(arg.ground_truth, arg.real_data, arg.fake_data)
