@@ -16,8 +16,8 @@ parser = argparse.ArgumentParser(description = "Trains a neural network to ident
 parser.add_argument("real_data", type=str, help="Path to data containing a sample real kozac sequences")
 parser.add_argument("fake_data", type=str, help="Path to data contaiing fake kozac sequences")
 parser.add_argument("ground_truth", type=str, help="Path to data containing all known kozac sequences")
-parser.add_argument("--encoder", type=str, default="mm1", help="How you want to numerically encode the data (pwm, binary, one_hot, mm1, rf)")
-parser.add_argument("--model_type", type=str, default="nn", help="Which model you want to build (nn, svm, lstm, pwm)")
+parser.add_argument("--encoder", type=str, default="mm1", help="How you want to numerically encode the data (pwm, binary, one_hot, mm1)")
+parser.add_argument("--model_type", type=str, default="nn", help="Which model you want to build (nn, svm, lstm, pwm, rf)")
 parser.add_argument("--train_proportion", type=float, default=.75, help="Percentage of data you want in the training set")
 parser.add_argument("--hid_layer", type=int, default=3, help="Number of hidden layers")
 parser.add_argument("--units", type=int, default=9, help="Number of units in each hidden layer")
@@ -25,7 +25,7 @@ parser.add_argument("--activation",type=str, default="relu", help="Activation fu
 parser.add_argument("--batches", type=int, default=50, help="Batch size")
 parser.add_argument("--epochs", type=int, default=100, help="Number of epochs")
 parser.add_argument("--k", type=int, default=10, help="Number of folds for cross validation")
-paser.add_argument("--n_estimators", type=int, default=100, help="Number of forests for the Random Forest Model")
+parser.add_argument("--n_estimators", type=int, default=100, help="Number of forests for the Random Forest Model")
 
 arg = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
