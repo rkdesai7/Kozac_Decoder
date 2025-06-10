@@ -395,7 +395,6 @@ def train_rf(real, fake, ground_truth, n_estimators, k):
 	#metrics
 	best_accuracy = 0
 	best_model = None
-	best_losses = None
 	best_bias = 0
 	best_var = 0
 	fold = 1
@@ -413,7 +412,6 @@ def train_rf(real, fake, ground_truth, n_estimators, k):
 		if acc > best_accuracy:
 			best_accuracy = acc
 			best_model = model
-			best_losses = losses
 			best_bias = bias
 			best_var = variance
 		fold += 1
